@@ -2,3 +2,4 @@
 ruele.log
 watched_messages
 .vscode/settings.json
+**/__pycache__

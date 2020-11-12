@@ -11,10 +11,14 @@ logger.addHandler(handler)
 
 import shelve
 
+from modules.manage_reaction import manage_reaction
+from modules.emoji import Faces
+
 intents = discord.Intents.default()
 intents.members = True
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or(':'), intents=intents)
+faces = Faces(bot)
 
 @bot.event
 async def on_ready():
@@ -23,40 +27,23 @@ async def on_ready():
     print(bot.user.id)
     print('------')
 
-@bot.command()
-async def manage(ctx, *, role: discord.Role):
+# MANAGE ROLES --------------------------------------------------------------
+
+@bot.command('manage-role', aliases=['manage'])
+async def manage_roles(ctx, *, role: discord.Role):
     await ctx.message.delete()
-    msg = await ctx.send(f'Heirs of {ctx.message.guild.name}, click the reaction to add or remove **{role.name}** role.')
+    msg = await ctx.send(f'Heirs of *{ctx.message.guild.name}*, click the reaction to add or remove the **{role.name}** role.')
     await msg.add_reaction('✅')
     with shelve.open('watched_messages') as wm:
         wm[str(msg.id)] = role.id
 
-async def manage_reaction(payload, added: bool):
-    if payload.user_id == bot.user.id:
-        return
-
-    with shelve.open('watched_messages') as wm:
-        if not str(payload.message_id) in wm:
-            return
-
-        messageID = payload.message_id
-        roleID = wm[str(messageID)]
-        guild = bot.get_guild(payload.guild_id)
-        role = discord.utils.get(guild.roles, id=roleID)
-        member = discord.utils.get(guild.members, id=payload.user_id)
-
-        if added:
-            await member.add_roles(role)
-        else:
-            await member.remove_roles(role)
-
 @bot.event
 async def on_raw_reaction_add(payload):
-    await manage_reaction(payload, True)
+    await manage_reaction(bot, payload, True)
 
 @bot.event
 async def on_raw_reaction_remove(payload):
-    await manage_reaction(payload, False)
+    await manage_reaction(bot, payload, False)
 
 @bot.event
 async def on_raw_message_delete(payload):
@@ -64,5 +51,38 @@ async def on_raw_message_delete(payload):
         if str(payload.message_id) in wm:
             del wm[str(payload.message_id)]
 
+# LIST ROLES --------------------------------------------------------------
+
+@bot.command('list-roles', aliases=['roles'])
+async def list_roles(ctx):
+    roles = []
+    with shelve.open('watched_messages') as wm:
+        for role_id in wm.values():
+            try:
+                role = discord.utils.get(ctx.message.guild.roles, id=role_id)
+                roles.append(role.name)
+            except:
+                continue
+    nl = '\n'
+    if len(roles) == 0:
+        await ctx.send('Nothing in this guild yet…')
+    else:
+        await ctx.send(f'I manage these roles on *{ctx.message.guild.name}*:{nl}**{nl.join(roles)}**')
+
+# SEND ANYTHING------------------------------------------------------------
+
+@bot.command('send')
+async def send_msg(ctx, channel: discord.TextChannel, *, msg: str):
+    await channel.send(msg)
+
+# SAY HI (?) --------------------------------------------------------------
+
+@bot.listen()
+async def on_message(message):
+    if bot.user in message.mentions:
+        await message.channel.send(faces.random())
+
+
+# -------------------------------------------------------------------------
 
 bot.run(os.environ.get('RUELE_TOKEN'))
