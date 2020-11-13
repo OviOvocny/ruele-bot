@@ -21,8 +21,9 @@ class Fortune(commands.Cog):
     )
     async def fortune(self, ctx):
         preface = random.choice(self.data['prefaces'])
+        guild_name = ctx.message.guild.name if ctx.message.guild else 'Orbis'
         intro = preface.format(
-            guild=ctx.message.guild.name
+            guild=guild_name
         )
         await ctx.trigger_typing()
         await sleep(1)
