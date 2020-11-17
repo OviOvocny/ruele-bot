@@ -76,19 +76,21 @@ from random import randrange
 
 @bot.listen()
 async def on_message(message):
-    # Mentioned - send face
-    # if bot.user in message.mentions:
-    #     await message.channel.send(faces.random())
     # Greeting
     if not bot.user in message.mentions and len(message.mentions) > 0 and is_greeted(message.content):
         await sleep(randrange(5,10))
         await message.channel.trigger_typing()
         await sleep(1)
         await message.channel.send(greet() + '! ' + str(faces.get('hyper')))
+    # FORTUNE COOKIE!!!!!!!
     if '🥠' in message.content:
         await message.add_reaction(faces.get('hyper'))
         ctx = await bot.get_context(message)
         await ctx.invoke(bot.get_command('fortune_quick'))
+    # Tagrage
+    if message.mention_everyone:
+        await sleep(randrange(1,3))
+        await message.add_reaction(faces.get('angry'))
 
 
 # -------------------------------------------------------------------------

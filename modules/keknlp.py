@@ -1,7 +1,14 @@
 import random
+import re
 
-greetings = ['hi', 'hello', 'yo', 'hey', 'heyo', 'greetings', 'good morning', 'good afternoon', 'good evening', 'sup']
+
+greetings_in = ['hi', 'hello', 'yo', 'hey', 'heyo', 'greetings', 'good morning', 'good afternoon', 'good evening', 'sup', 'salutations', 'welcome']
+greetings_out = ['hi', 'hello', 'yo', 'hey', 'greetings']
+
 def greet():
-    return random.choice(greetings).capitalize()
+    return random.choice(greetings_out).capitalize()
+
 def is_greeted(string):
-    return any(substring in string.lower() for substring in greetings)
+    regexes = '(?:%s)' % '|'.join([r'\b%s\b' % g for g in greetings_in])
+    return bool(re.search(regexes, string, re.I))
+
