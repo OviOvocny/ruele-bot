@@ -4,3 +4,4 @@ watched_messages
 **/*.db
 .vscode/settings.json
 **/__pycache__
+reminder_map

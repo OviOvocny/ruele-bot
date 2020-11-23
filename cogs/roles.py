@@ -22,7 +22,7 @@ class Roles(commands.Cog):
         await ctx.message.delete()
         msg = await ctx.send(f'Heirs of *{ctx.message.guild.name}*, click the reaction to add or remove the **{role.name}** role.')
         await msg.add_reaction('✅')
-        with shelve.open('watched_messages') as wm:
+        with shelve.open('watched_messages', writeback=True) as wm:
             wm[str(msg.id)] = role.id
 
     @manage_roles.error

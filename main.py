@@ -16,6 +16,7 @@ import shelve
 from modules.utils import config, get_local_roles
 from modules.manage_reaction import manage_reaction
 from modules.emoji import Faces
+from modules.reminder_schedulers import Reminders
 
 intents = discord.Intents.default()
 intents.members = True
@@ -25,6 +26,25 @@ faces = Faces(bot)
 
 bot.load_extension('cogs.roles')
 bot.load_extension('cogs.fortune')
+bot.load_extension('cogs.reminders')
+
+async def reminder_runner ():
+    r = Reminders()
+    while True:
+        event = r.next_event()
+        await discord.utils.sleep_until(event.datetime)
+        with shelve.open('reminder_map') as rm:
+            if event.type in rm:
+                for guild_id in rm[event.type]:
+                    channel_id, role_id = rm[event.type][guild_id]
+
+                    guild = bot.get_guild(guild_id)
+                    channel = bot.get_channel(channel_id)
+                    role = discord.utils.get(guild.roles, id=role_id)
+
+                    msg = f'{role.mention} {event.message}'
+
+                    await channel.send(msg)
 
 @bot.event
 async def on_ready():
@@ -32,6 +52,7 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+    await reminder_runner()
 
 @bot.event
 async def on_command_error(ctx, err):
@@ -70,7 +91,7 @@ async def send_msg(ctx, channel: discord.TextChannel, *, msg: str):
 
 # SAY HI (?) --------------------------------------------------------------
 
-from modules.keknlp import is_greeted, greet
+from modules.keknlp import is_greeted, greet, is_sailor_moon_meme
 from asyncio import sleep
 from random import randrange
 
@@ -87,6 +108,10 @@ async def on_message(message):
         await message.add_reaction(faces.get('hyper'))
         ctx = await bot.get_context(message)
         await ctx.invoke(bot.get_command('fortune_quick'))
+    # ...tuxedo mask
+    if is_sailor_moon_meme(message.content):
+        await sleep(1)
+        await message.channel.send('https://media.giphy.com/media/aenAbxws6nvbO/giphy.gif')
     # Tagrage
     if message.mention_everyone:
         await sleep(randrange(1,3))
