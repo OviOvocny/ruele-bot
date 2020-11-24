@@ -51,10 +51,10 @@ class GWScheduler(Scheduler):
         weekday = dt.weekday() + 1
         meta = self.events[weekday]
         return ReminderEvent(
-            self.type, 
-            dt, 
+            self.type,
+            dt,
             timediff(dt),
-            meta[0], 
-            meta[1], 
+            meta[0],
+            meta[1],
             self._generate_message(meta[0])
         )
