@@ -13,12 +13,12 @@ class Faces:
         self.bot = bot
 
     def get(self, face: str):
-        id = mapping.get(face, None)
-        if id is not None:
-            return self.bot.get_emoji(id)
+        eid = mapping.get(face, None)
+        if eid is not None:
+            return self.bot.get_emoji(eid)
         else:
             return None
 
     def random(self):
-        id = random.choice(list(mapping.values()))
-        return self.bot.get_emoji(id)
+        eid = random.choice(list(mapping.values()))
+        return self.bot.get_emoji(eid)

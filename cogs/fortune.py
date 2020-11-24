@@ -1,9 +1,8 @@
 import json
 import random
 from asyncio import sleep
-import discord
 from discord.ext import commands
-from modules.emoji import Faces # pylint: disable=import-error
+from modules.emoji import Faces
 
 class Fortune(commands.Cog):
     """No one shall escape the rabbit fortune cookies."""
@@ -14,7 +13,7 @@ class Fortune(commands.Cog):
         with open('assets/fortune.json') as data:
             self.data = json.load(data)
 
-    @commands.command('fortune', 
+    @commands.command('fortune',
         aliases=['cookie'],
         brief='Care for a cookie?',
         help='No one shall escape the rabbit fortune cookies.'

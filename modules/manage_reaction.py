@@ -1,12 +1,12 @@
-import discord
 import shelve
+import discord
 
 async def manage_reaction(bot, payload, added: bool):
     if payload.user_id == bot.user.id:
         return
 
     with shelve.open('watched_messages') as wm:
-        if not str(payload.message_id) in wm:
+        if str(payload.message_id) not in wm:
             return
 
         messageID = payload.message_id

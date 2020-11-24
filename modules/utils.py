@@ -1,5 +1,6 @@
-import discord
 import shelve
+import discord
+import pendulum
 
 def config(key, val = None, collection = False, delete = False):
     with shelve.open('s_config') as cfg:
@@ -24,6 +25,9 @@ def get_local_roles(guild, id_collection):
             role = discord.utils.get(guild.roles, id=role_id)
             if role is not None:
                 roles.append(role)
-        except:
+        except: # pylint: disable=bare-except
             continue
     return roles
+
+def timediff (dt):
+    return dt.diff_for_humans(pendulum.now('UTC'), True)

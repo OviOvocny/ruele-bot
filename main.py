@@ -1,22 +1,24 @@
 # No one shall escape the rabbit fortune cookies. 
 
 import os
+import logging
+import shelve
+from asyncio import sleep
+from random import randrange
+
 import discord
 from discord.ext import commands
 
-import logging
+from modules.manage_reaction import manage_reaction
+from modules.emoji import Faces
+from modules.reminder_schedulers import Reminders
+from modules.keknlp import is_greeted, greet, is_sailor_moon_meme
+
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='ruele.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
-
-import shelve
-
-from modules.utils import config, get_local_roles
-from modules.manage_reaction import manage_reaction
-from modules.emoji import Faces
-from modules.reminder_schedulers import Reminders
 
 intents = discord.Intents.default()
 intents.members = True
@@ -31,7 +33,7 @@ bot.load_extension('cogs.reminders')
 async def reminder_runner ():
     r = Reminders()
     while True:
-        event = r.next_event()
+        event = r.upcoming()[0]
         await discord.utils.sleep_until(event.datetime)
         with shelve.open('reminder_map') as rm:
             if event.type in rm:
@@ -86,14 +88,10 @@ async def on_raw_message_delete(payload):
 
 @bot.command('send', hidden=True)
 @commands.is_owner()
-async def send_msg(ctx, channel: discord.TextChannel, *, msg: str):
+async def send_msg(_, channel: discord.TextChannel, *, msg: str):
     await channel.send(msg)
 
 # SAY HI (?) --------------------------------------------------------------
-
-from modules.keknlp import is_greeted, greet, is_sailor_moon_meme
-from asyncio import sleep
-from random import randrange
 
 @bot.listen()
 async def on_message(message):

@@ -1,7 +1,7 @@
 import shelve
 import discord
 from discord.ext import commands
-from modules.utils import get_local_roles # pylint: disable=import-error
+from modules.utils import get_local_roles
 
 class Roles(commands.Cog):
     """Use these commands to help manage roles in this guild."""
