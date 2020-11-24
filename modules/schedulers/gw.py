@@ -37,7 +37,7 @@ class GWScheduler(Scheduler):
     def _generate_message (self, title):
         return random.choice(self.messages).format(title=title)
 
-    def next_datetime (self) -> pendulum.DateTime:
+    async def next_datetime (self) -> pendulum.DateTime:
         now = pendulum.now('UTC')
         weekday = now.weekday() + 1
         if weekday in self.gw_weekdays and now < now.at(SERVER_RESET):
@@ -46,8 +46,8 @@ class GWScheduler(Scheduler):
             next_weekday = min(filter(lambda x: x > weekday, self.gw_weekdays), default=pendulum.MONDAY)
             return now.next(next_weekday).at(SERVER_RESET, 0, self.priority)
 
-    def next (self):
-        dt = self.next_datetime()
+    async def next (self):
+        dt = await self.next_datetime()
         weekday = dt.weekday() + 1
         meta = self.events[weekday]
         return ReminderEvent(

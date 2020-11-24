@@ -77,7 +77,7 @@ class Reminders(commands.Cog):
     )
     async def upcoming_reminder(self, ctx):
         guild = ctx.message.guild
-        events = R().upcoming()
+        events = await R().upcoming()
         event = events[0]
 
         with shelve.open('reminder_map') as rm:

@@ -10,11 +10,11 @@ class Scheduler(ABC):
         self.priority = priority * 2
 
     @abstractmethod
-    def next_datetime (self) -> pendulum.DateTime:
+    async def next_datetime (self) -> pendulum.DateTime:
         """Returns the next event datetime"""
 
     @abstractmethod
-    def next (self) -> ReminderEvent:
+    async def next (self) -> ReminderEvent:
         """Returns the next event"""
 
     def description (self) -> str:

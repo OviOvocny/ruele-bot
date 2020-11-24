@@ -33,7 +33,8 @@ bot.load_extension('cogs.reminders')
 async def reminder_runner ():
     r = Reminders()
     while True:
-        event = r.upcoming()[0]
+        events = await r.upcoming()
+        event = events[0]
         await discord.utils.sleep_until(event.datetime)
         with shelve.open('reminder_map') as rm:
             if event.type in rm:

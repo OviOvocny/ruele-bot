@@ -48,7 +48,7 @@ class HallScheduler(Scheduler):
         ),
     ]
 
-    def next_datetime (self):
+    async def next_datetime (self):
         now = pendulum.now('UTC')
         weekday = now.weekday() + 1
         if weekday == pendulum.MONDAY and now < now.at(SERVER_RESET):
@@ -56,8 +56,8 @@ class HallScheduler(Scheduler):
         else:
             return now.next(pendulum.MONDAY).at(SERVER_RESET, 0, self.priority)
 
-    def next (self):
-        dt = self.next_datetime()
+    async def next (self):
+        dt = await self.next_datetime()
         week_seed_diff = self.seed_dt.diff(dt).in_weeks()
         meta = self.events[week_seed_diff % len(self.events)]
         return ReminderEvent(
