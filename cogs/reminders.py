@@ -101,5 +101,25 @@ class Reminders(commands.Cog):
 
             await ctx.send(f'{info}\n*{event.detail}*\n{reg}\n{later}')
 
+    # LIST ALL ----------------------------------------------------------------
+
+    @commands.command('reminders',
+        brief='See available reminders and registered roles',
+        help='I\'ll list all available reminders and the roles within your guild registered to receive them, if any.'
+    )
+    async def list_reminders(self, ctx):
+        guild = ctx.message.guild
+        rtypes = {r.type: r(0).description() for r in R.types}
+        rroles = {}
+        with shelve.open('reminder_map') as rm:
+            for rtype, guilds in rm.items():
+                if guild.id in guilds:
+                    _, role_id = guilds[guild.id]
+                    role = discord.utils.get(guild.roles, id=role_id)
+                    rroles[rtype] = role.name
+
+        msg = '\n\n'.join([f'__{t}__ ({rroles.get(t, "no role")})\n*{d}.*' for t,d in rtypes.items()])
+        await ctx.send(msg)
+
 def setup(bot):
     bot.add_cog(Reminders(bot))
