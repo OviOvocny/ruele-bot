@@ -55,6 +55,9 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+    status = discord.Status.do_not_disturb if 'DEVMODE' in os.environ else discord.Status.online
+    print(status)
+    await bot.change_presence(status=status)
     await reminder_runner()
 
 @bot.event
