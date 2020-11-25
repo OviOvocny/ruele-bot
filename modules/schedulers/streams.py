@@ -38,13 +38,13 @@ class LiveStreamScheduler(Scheduler):
 
     async def next_datetime (self) -> pendulum.DateTime:
         a = await self._fetch_stove_articles()
-        return self._parse_schedule(a['context']['article_list'][0])
+        return self._parse_schedule(a['context']['article_list'][0]).add(seconds=self.priority)
 
     async def next (self):
         a = await self._fetch_stove_articles()
         article = a['context']['article_list'][0]
-        dt = self._parse_schedule(article)
-        if dt is None or dt < pendulum.now('UTC'):
+        dt = self._parse_schedule(article).add(seconds=self.priority)
+        if dt is None or dt < pendulum.now(dt.timezone):
             return None
         details = self._parse_details(article)
         return ReminderEvent(

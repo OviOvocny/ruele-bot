@@ -90,7 +90,7 @@ class Reminders(commands.Cog):
                 role = discord.utils.get(guild.roles, id=role_id)
 
 
-            info = f'Next up is **{event.title}** in {event.timediff} ({event.datetime.format("dddd, MMMM DD, hh:mm")} UTC).'
+            info = f'Next up is **{event.title}** in {event.timediff} ({event.datetime.format("dddd, MMMM DD, hh:mm")} {event.datetime.timezone_name}).'
             reg = 'You can only get reminders via a role in servers.'
             if guild is not None:
                 reg = f'The **{role.name}** role is registered for {event.type} reminders.' if registered else f'You can register a role for {event.type} reminders using `:remind`.'
