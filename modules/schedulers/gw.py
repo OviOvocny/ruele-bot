@@ -40,7 +40,7 @@ class GWScheduler(Scheduler):
     async def next_datetime (self) -> pendulum.DateTime:
         now = pendulum.now('UTC')
         weekday = now.weekday() + 1
-        if weekday in self.gw_weekdays and now < now.at(SERVER_RESET):
+        if weekday in self.gw_weekdays and now < now.at(SERVER_RESET, 0, self.priority):
             return now.at(SERVER_RESET, 0, self.priority)
         else:
             next_weekday = min(filter(lambda x: x > weekday, self.gw_weekdays), default=pendulum.MONDAY)

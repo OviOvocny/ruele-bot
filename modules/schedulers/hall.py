@@ -51,7 +51,7 @@ class HallScheduler(Scheduler):
     async def next_datetime (self):
         now = pendulum.now('UTC')
         weekday = now.weekday() + 1
-        if weekday == pendulum.MONDAY and now < now.at(SERVER_RESET):
+        if weekday == pendulum.MONDAY and now < now.at(SERVER_RESET, 0, self.priority):
             return now.at(SERVER_RESET, 0, self.priority)
         else:
             return now.next(pendulum.MONDAY).at(SERVER_RESET, 0, self.priority)
