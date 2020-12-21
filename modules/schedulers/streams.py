@@ -28,13 +28,19 @@ class LiveStreamScheduler(Scheduler):
         return pendulum.from_format(dt, 'YYYY.MM.DD HH:mm', tz=tz)
 
     def _parse_details (self, article):
-        d = list(map(str.strip, article['content'].split('2. Details ')[1].split(' 3.')[0].split('-')))
-        while '' in d:
-            d.remove('')
-        return {
-            'title': article['title'],
-            'details': d
-        }
+        try:
+            d = list(map(str.strip, article['content'].split('2. Details ')[1].split(' 3.')[0].split('-')))
+            while '' in d:
+                d.remove('')
+            return {
+                'title': article['title'],
+                'details': d
+            }
+        except:
+            return {
+                'title': article['title'],
+                'details': ''
+            }
 
     async def next_datetime (self) -> pendulum.DateTime:
         a = await self._fetch_stove_articles()
