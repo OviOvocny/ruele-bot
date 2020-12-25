@@ -18,7 +18,10 @@ class LiveStreamScheduler(Scheduler):
                 return await r.json()
 
     def _parse_schedule (self, article) -> pendulum.DateTime:
-        s = article['content'].split('Schedule: ')[1].split(' 2.')[0]
+        try:
+            s = article['content'].split('Schedule: ')[1].split(' 2.')[0]
+        except IndexError:
+            return None
         dt_matcher = re.compile(r'(\d+\.\d+\.\d+) \(.*\) (\d+:\d+) (.*)')
         matched = dt_matcher.match(s)
         if matched is None or len(matched.groups()) == 0:
@@ -44,20 +47,25 @@ class LiveStreamScheduler(Scheduler):
 
     async def next_datetime (self) -> pendulum.DateTime:
         a = await self._fetch_stove_articles()
-        return self._parse_schedule(a['context']['article_list'][0]).add(seconds=self.priority)
+        dt = self._parse_schedule(a['context']['article_list'][0])
+        if dt is None:
+            return None
+        else:
+            return dt.add(seconds=self.priority)
 
     async def next (self):
         a = await self._fetch_stove_articles()
         article = a['context']['article_list'][0]
-        dt = self._parse_schedule(article).add(seconds=self.priority)
+        dt = self._parse_schedule(article)
         if dt is None or dt < pendulum.now(dt.timezone):
             return None
+        dta = dt.add(seconds=self.priority)
         details = self._parse_details(article)
         return ReminderEvent(
             self.type,
-            dt,
-            timediff(dt),
+            dta,
+            timediff(dta),
             details['title'],
             '\n'.join([f'- {i}' for i in details['details']]),
-            f'Hello! There\'s should be a live stream starting: {details["title"]}. Check out the E7 Twitch or YouTube to watch and look out for surveys with rewards!'
+            f'Hello! There should be a live stream starting: {details["title"]}. Check out the E7 Twitch or YouTube to watch and look out for surveys with rewards!'
         )
