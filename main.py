@@ -100,7 +100,7 @@ async def send_msg(_, channel: discord.TextChannel, *, msg: str):
 @bot.listen()
 async def on_message(message):
     # Greeting
-    if not bot.user in message.mentions and len(message.mentions) > 0 and is_greeted(message.content):
+    if not bot.user in message.mentions and message.author.id != bot.user.id and len(message.mentions) > 0 and is_greeted(message.content):
         await sleep(randrange(5,10))
         await message.channel.trigger_typing()
         await sleep(1)
