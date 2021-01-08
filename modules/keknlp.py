@@ -15,3 +15,7 @@ def is_greeted(string):
 def is_sailor_moon_meme(string):
     regex = 'you didn\'?t do anything'
     return bool(re.search(regex, string, re.I))
+
+def is_gun(string):
+    regex = r'<:[^:]*gun[^:]*:|\bgun[\b|\W]|🔫|:749710868689846453|\bgun$'
+    return bool(re.search(regex, string, re.I))

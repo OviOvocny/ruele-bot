@@ -4,7 +4,7 @@ import os
 import logging
 import shelve
 from asyncio import sleep
-from random import randrange
+from random import randrange, random
 
 import discord
 from discord.ext import commands
@@ -12,7 +12,7 @@ from discord.ext import commands
 from modules.manage_reaction import manage_reaction
 from modules.emoji import Faces
 from modules.reminder_schedulers import Reminders
-from modules.keknlp import is_greeted, greet, is_sailor_moon_meme
+from modules.keknlp import is_greeted, greet, is_sailor_moon_meme, is_gun
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
@@ -118,6 +118,13 @@ async def on_message(message):
     if message.mention_everyone:
         await sleep(randrange(1,3))
         await message.add_reaction(faces.get('angry'))
+    # GUN
+    if is_gun(message.content) and message.author.id != bot.user.id and random() < .7:
+        KYU = 749710868689846453
+        await sleep(1)
+        await message.channel.trigger_typing()
+        await sleep(randrange(1,2))
+        await message.channel.send(bot.get_emoji(KYU))
 
 
 # -------------------------------------------------------------------------
