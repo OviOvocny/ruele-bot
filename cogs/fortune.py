@@ -4,6 +4,16 @@ from asyncio import sleep
 from discord.ext import commands
 from modules.emoji import Faces
 
+CHI = 349324050650365953
+OVI = 399106406026051597
+
+async def send_fortune(ctx, data):
+    chi = ctx.message.author.id == CHI
+    source = 'krautunes' if chi else 'fortunes'
+    await ctx.trigger_typing()
+    await sleep(random.randrange(3,7))
+    await ctx.send('*'+random.choice(data[source])+'*')
+
 class Fortune(commands.Cog):
     """No one shall escape the rabbit fortune cookies."""
 
@@ -32,18 +42,15 @@ class Fortune(commands.Cog):
         await sleep(random.randrange(1,2))
         await ctx.send(random.choice(self.data['transitions']) + ' ' + str(self.faces.random()))
         #
-        await ctx.trigger_typing()
-        await sleep(random.randrange(3,7))
-        await ctx.send('*'+random.choice(self.data['fortunes'])+'*')
+        await send_fortune(ctx, self.data)
 
     @commands.command('fortune_quick', 
         hidden=True
     )
     async def fortune_quick(self, ctx):
         await ctx.send('Let\'s crack this open!')
-        await ctx.trigger_typing()
-        await sleep(random.randrange(3,7))
-        await ctx.send('*'+random.choice(self.data['fortunes'])+'*')
+        await send_fortune(ctx, self.data)
+        
 
 def setup(bot):
     bot.add_cog(Fortune(bot))
