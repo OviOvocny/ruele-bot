@@ -9,7 +9,7 @@ OVI = 399106406026051597
 
 async def send_fortune(ctx, data):
     chi = ctx.message.author.id == CHI
-    source = 'krautunes' if chi else 'fortunes'
+    source = 'krautunes' if chi and random.random() < .5 else 'fortunes'
     await ctx.trigger_typing()
     await sleep(random.randrange(3,7))
     await ctx.send('*'+random.choice(data[source])+'*')
