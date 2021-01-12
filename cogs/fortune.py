@@ -1,6 +1,7 @@
 import json
 import random
 from asyncio import sleep
+import discord
 from discord.ext import commands
 from modules.emoji import Faces
 
@@ -12,6 +13,11 @@ async def send_fortune(ctx, data):
     source = 'krautunes' if chi and random.random() < .5 else 'fortunes'
     await ctx.trigger_typing()
     await sleep(random.randrange(3,7))
+    # chicken
+    if discord.utils.get(ctx.message.author.roles, id=798618145223868437) is not None:
+        await ctx.send('*Fuck Dizzy.*')
+        return
+    # -------
     await ctx.send('*'+random.choice(data[source])+'*')
 
 class Fortune(commands.Cog):
