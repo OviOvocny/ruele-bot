@@ -53,20 +53,23 @@ class Roles(commands.Cog):
     @commands.check(is_manager)
     @commands.guild_only()
     async def membership(self, ctx, *, user: discord.Member):
-        guild_id = str(ctx.message.guild.id)
-        with shelve.open('guild_members') as gm:
-            if not guild_id in gm:
-                await ctx.send('No role set. Use the `member-role` command to designate a membership role first.')
-            else:
-                role_id = gm[guild_id]
-                role = discord.utils.get(ctx.message.guild.roles, id=role_id)
-                user_role_ids = map(lambda x: x.id, user.roles)
-                if role_id in user_role_ids:
-                    await user.remove_roles(role, reason=f'Kicked by {ctx.message.author.name}')
-                    await ctx.send(f'Per {ctx.message.author.display_name}\'s request, {user.display_name} is no longer a member of the guild {str(self.faces.get("panic"))}')
+        if user.bot:
+            await ctx.send(f'{ctx.message.author.display_name}! {user.display_name} is a bot. {str(self.faces.get("angry"))}')
+        else:
+            guild_id = str(ctx.message.guild.id)
+            with shelve.open('guild_members') as gm:
+                if guild_id not in gm:
+                    await ctx.send('No role set. Use the `member-role` command to designate a membership role first.')
                 else:
-                    await user.add_roles(role, reason=f'Accepted by {ctx.message.author.name}')
-                    await ctx.send(f'I added the {role.name} role on behalf of {ctx.message.author.display_name}. Welcome to the guild, {user.mention}! {str(self.faces.get("hyper"))}')
+                    role_id = gm[guild_id]
+                    role = discord.utils.get(ctx.message.guild.roles, id=role_id)
+                    user_role_ids = map(lambda x: x.id, user.roles)
+                    if role_id in user_role_ids:
+                        await user.remove_roles(role, reason=f'Kicked by {ctx.message.author.name}')
+                        await ctx.send(f'Per {ctx.message.author.display_name}\'s request, {user.display_name} is no longer a member of the guild {str(self.faces.get("panic"))}')
+                    else:
+                        await user.add_roles(role, reason=f'Accepted by {ctx.message.author.name}')
+                        await ctx.send(f'I added the {role.name} role on behalf of {ctx.message.author.display_name}. Welcome to the guild, {user.mention}! {str(self.faces.get("hyper"))}')
 
     @membership.error
     async def merr(self, ctx, err):
