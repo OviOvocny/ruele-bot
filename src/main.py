@@ -1,13 +1,16 @@
-# No one shall escape the rabbit fortune cookies. 
+# No one shall escape the rabbit fortune cookies.
 
 import os
+import atexit
 import logging
 import shelve
 from asyncio import sleep
 from random import randrange, random
+import aioredis
 
 import discord
 from discord.ext import commands
+from constants import REDIS_PASS
 
 from modules.manage_reaction import manage_reaction
 from modules.emoji import Faces
@@ -16,7 +19,7 @@ from modules.keknlp import is_greeted, greet, is_sailor_moon_meme, is_gun
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler(filename='ruele.log', encoding='utf-8', mode='w')
+handler = logging.FileHandler(filename='logs/ruele.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
@@ -49,8 +52,14 @@ async def reminder_runner ():
 
                     await channel.send(msg)
 
+def on_exit():
+    print('Closing Redis pool...')
+    # pylint: disable=no-member
+    bot.db.close()
+
 @bot.event
 async def on_ready():
+    atexit.register(on_exit)
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)
@@ -58,6 +67,19 @@ async def on_ready():
     status = discord.Status.do_not_disturb if 'DEVMODE' in os.environ else discord.Status.online
     print(status)
     await bot.change_presence(status=status)
+    print('------')
+    try:
+        # Use the high-level interface.
+        db_pool = await aioredis.create_redis_pool(
+            "redis://storage",
+            password=REDIS_PASS,
+            encoding="utf-8"
+        )
+        setattr(bot, "db", db_pool)
+        print('Redis pool open')
+    except OSError:
+        logger.error('Could not open database pool. Exiting!')
+        exit()
     await reminder_runner()
 
 @bot.event

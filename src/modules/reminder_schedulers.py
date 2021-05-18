@@ -7,7 +7,7 @@ from modules.schedulers.streams import LiveStreamScheduler
 class Reminders:
     # schedulers to init and use, same time events will fire in order specified
     types = [
-        LiveStreamScheduler,
+        #LiveStreamScheduler,
         GWScheduler,
         HallScheduler
     ]

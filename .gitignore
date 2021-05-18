@@ -6,3 +6,4 @@ watched_messages
 **/__pycache__
 reminder_map
 .pylintrc
+.env

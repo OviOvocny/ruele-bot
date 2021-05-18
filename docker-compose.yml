@@ -1,0 +1,18 @@
+version: '3.4'
+
+services:
+  # redis datastore
+  storage:
+    image: redis
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: always
+  # python bot
+  ruelebot:
+    image: ruelebot
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    env_file: .env
+    restart: unless-stopped
