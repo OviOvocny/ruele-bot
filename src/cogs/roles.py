@@ -1,4 +1,4 @@
-import shelve
+import typing
 import discord
 from discord.ext import commands
 from modules.utils import get_local_roles
@@ -34,47 +34,44 @@ class Roles(commands.Cog):
         await self.bot.db.hset('member_role', ctx.message.guild.id, role.id)
         await ctx.send(f'Ok, **{role.name}** is now the member role for *{ctx.message.guild.name}*.')
 
-    @commands.command('test-mgmt', hidden=True)
-    @commands.check(is_manager)
-    @commands.guild_only()
-    async def test_mgmt(self, ctx):
-        # TODO redis
-        with shelve.open('guild_managers') as gm:
-            await ctx.send(", ".join([str(a) for a in gm.values()]))
-
     # MANAGE MEMBERS ------------------------------------------------------------
 
     @commands.command('membership',
         aliases=['accept', 'kick'],
         brief='Toggle guild member role for a user',
-        help='Using this command, managers can add or remove the designated *guild membership* role.'
+        help='Using this command, managers can add or remove the designated *guild membership* role. Optionally add IGN for me to remember.'
     )
     @commands.check(is_manager)
     @commands.guild_only()
-    async def membership(self, ctx, user: discord.Member, ign: str):
-        # TODO redis
+    async def membership(self, ctx, user: discord.Member, ign: typing.Optional[str]):
         if user.bot:
             await ctx.send(f'{ctx.message.author.display_name}! {user.display_name} is a bot. {str(self.faces.get("angry"))}')
         else:
             guild_id = str(ctx.message.guild.id)
-            with shelve.open('guild_members') as gm:
-                if guild_id not in gm:
-                    await ctx.send('No role set. Use the `member-role` command to designate a membership role first.')
+            member_role_id = await self.bot.db.hget('member_role', guild_id)
+            if member_role_id is None:
+                await ctx.send('No role set. Use the `member-role` command to designate a membership role first.')
+            else:
+                role = discord.utils.get(ctx.message.guild.roles, id=int(member_role_id))
+                user_role_ids = map(lambda x: x.id, user.roles)
+                if int(member_role_id) in user_role_ids:
+                    await self.bot.db.hdel('ign', user.id)
+                    await user.remove_roles(role, reason=f'Kicked by {ctx.message.author.name}')
+                    await ctx.send(f'Per {ctx.message.author.display_name}\'s request, {user.display_name} is no longer a member of the guild {str(self.faces.get("panic"))}')
                 else:
-                    role_id = gm[guild_id]
-                    role = discord.utils.get(ctx.message.guild.roles, id=role_id)
-                    user_role_ids = map(lambda x: x.id, user.roles)
-                    if role_id in user_role_ids:
-                        await user.remove_roles(role, reason=f'Kicked by {ctx.message.author.name}')
-                        await ctx.send(f'Per {ctx.message.author.display_name}\'s request, {user.display_name} is no longer a member of the guild {str(self.faces.get("panic"))}')
-                    else:
-                        await user.add_roles(role, reason=f'Accepted by {ctx.message.author.name}')
-                        await ctx.send(f'I added the {role.name} role on behalf of {ctx.message.author.display_name}. Welcome to the guild, {user.mention}! {str(self.faces.get("hyper"))}')
+                    if ign:
+                        await self.bot.db.hset('ign', user.id, ign)
+                    await user.add_roles(role, reason=f'Accepted by {ctx.message.author.name}')
+                    await ctx.send(f'I added the {role.name} role on behalf of {ctx.message.author.display_name}. Welcome to the guild, {user.mention}! {str(self.faces.get("hyper"))}')
 
     @membership.error
     async def merr(self, ctx, err):
         member = discord.utils.get(ctx.message.guild.members, id=self.bot.user.id)
         print(member.guild_permissions)
+
+    # MANAGE IGN ----------------------------------------------------------------
+
+    
 
     # MANAGE ROLES --------------------------------------------------------------
 
@@ -95,25 +92,6 @@ class Roles(commands.Cog):
     async def manage_roles_err(self, ctx, err):
         if isinstance(err, commands.CheckFailure):
             await ctx.send('Sorry, but you need to have the management role in this guild.')
-
-    # LIST ROLES --------------------------------------------------------------
-
-    @commands.command('list-roles', 
-        aliases=['roles'],
-        brief='Show roles managed by me',
-        help='I\'ll list roles that I manage in this guild via reactions on messages that I create when instructed with the manage-role command.'
-    )
-    @commands.guild_only()
-    async def list_roles(self, ctx):
-        roles = []
-        rr = await self.bot.db.hgetall('role_reactions')
-        """ roles = [role.name for role in get_local_roles(ctx.message.guild, rr.values())]
-        nl = '\n'
-        if len(roles) == 0:
-            await ctx.send('Nothing in this guild yet…')
-        else:
-            await ctx.send(f'I manage these roles on *{ctx.message.guild.name}*:{nl}**{nl.join(roles)}**') """
-        await ctx.send(rr)
 
 def setup(bot):
     bot.add_cog(Roles(bot))

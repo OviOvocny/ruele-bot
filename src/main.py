@@ -3,20 +3,17 @@
 import os
 import atexit
 import logging
-import shelve
 from asyncio import sleep
 from random import randrange, random
-import sys
 import aioredis
 
 import discord
 from discord.ext import commands
-from discord.ext.commands.errors import CommandError
 from constants import REDIS_PASS
 
 from modules.manage_reaction import manage_reaction
 from modules.emoji import Faces
-from modules.reminder_schedulers import Reminders
+# from modules.reminder_schedulers import Reminders
 from modules.keknlp import is_greeted, greet, is_sailor_moon_meme, is_gun
 
 logger = logging.getLogger('discord')
@@ -35,6 +32,7 @@ bot.load_extension('cogs.roles')
 bot.load_extension('cogs.fortune')
 bot.load_extension('cogs.reminders')
 
+"""
 async def reminder_runner ():
     r = Reminders()
     while True:
@@ -53,6 +51,7 @@ async def reminder_runner ():
                     msg = f'{role.mention} {event.message}'
 
                     await channel.send(msg)
+"""                    
 
 async def on_exit():
     # pylint: disable=no-member
@@ -83,7 +82,7 @@ async def on_ready():
     except OSError:
         logger.error('Could not open database pool. Exiting!')
         exit()
-    await reminder_runner()
+    # await reminder_runner()
 
 @bot.event
 async def on_command_error(ctx, err):

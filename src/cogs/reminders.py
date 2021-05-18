@@ -1,4 +1,3 @@
-import shelve
 import discord
 from discord.ext import commands
 from modules.reminder_schedulers import Reminders as R
@@ -56,38 +55,6 @@ class Reminders(commands.Cog):
             await ctx.send('This reminder type wasn\'t registered here. My work here is done!')
         else:
             await ctx.send('Okay, I removed the reminder registration.')
-
-    # SHOW NEXT ---------------------------------------------------------------
-
-    @commands.command('upcoming', hidden=True,
-        brief='Get closest reminder info',
-        help='I\'ll show details for the closest upcoming reminder and whether your guild is registered to receive it.'
-    )
-    async def upcoming_reminder(self, ctx):
-        guild = ctx.message.guild
-        events = await R().upcoming()
-        event = events[0]
-
-        with shelve.open('reminder_map') as rm:
-            registered = True
-            role = None
-            if guild is None or not event.type in rm or not guild.id in rm[event.type]:
-                registered = False
-            else:
-                _, role_id = rm[event.type][guild.id]
-                role = discord.utils.get(guild.roles, id=role_id)
-
-
-            info = f'Next up is **{event.title}** in {event.timediff} ({event.datetime.format("dddd, MMMM DD, hh:mm")} {event.datetime.timezone_name}).'
-            reg = 'You can only get reminders via a role in servers.'
-            if guild is not None:
-                reg = f'The **{role.name}** role is registered for {event.type} reminders.' if registered else f'You can register a role for {event.type} reminders using `:remind`.'
-            later = 'That\'s all for now.'
-            if len(events) > 1:
-                e = ', '.join([f'**{n.title}** in {n.timediff}' for n in events[1:]])
-                later = f'Also coming up: {e}.'
-
-            await ctx.send(f'{info}\n*{event.detail}*\n{reg}\n{later}')
 
     # LIST ALL ----------------------------------------------------------------
 
