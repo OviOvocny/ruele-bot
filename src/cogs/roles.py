@@ -1,6 +1,9 @@
 import typing
 import discord
 from discord.ext import commands
+from discord_slash import cog_ext
+from discord_slash.model import SlashCommandOptionType
+from discord_slash.utils.manage_commands import create_option
 from modules.utils import get_local_roles
 from modules.checks import is_manager
 from modules.emoji import Faces
@@ -71,7 +74,37 @@ class Roles(commands.Cog):
 
     # MANAGE IGN ----------------------------------------------------------------
 
-    
+    @cog_ext.cog_slash(
+        # guild_ids=[416262003070337034], # dev
+        name='ign',
+        description='Recall or set user\'s in-game name',
+        options=[
+            create_option(
+                name='user',
+                description='User whose name you want to look up or save',
+                option_type=SlashCommandOptionType.USER,
+                required=True
+            ),
+            create_option(
+                name='name',
+                description='The in-game name to save',
+                option_type=SlashCommandOptionType.STRING,
+                required=False
+            )
+        ]
+    )
+    async def ign(self, ctx, user: discord.User, name: str = None):
+        if name is None:
+            stored = await self.bot.db.hget('ign', user.id)
+            if stored is None:
+                await ctx.send(f'I don\'t know {user.display_name}\'s IGN {str(self.faces.get("panic"))}', hidden=True)
+            else:
+                await ctx.send(f'{user.display_name} is {stored}.', hidden=True)
+        else:
+            await self.bot.db.hset('ign', user.id, name)
+            await ctx.send(f'I\'ll remember {user.display_name} as {name}!', hidden=True)
+
+
 
     # MANAGE ROLES --------------------------------------------------------------
 

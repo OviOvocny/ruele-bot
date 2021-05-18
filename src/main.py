@@ -9,6 +9,7 @@ import aioredis
 
 import discord
 from discord.ext import commands
+from discord_slash.client import SlashCommand
 from constants import REDIS_PASS
 
 from modules.manage_reaction import manage_reaction
@@ -27,6 +28,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or(':'), intents=intents)
 faces = Faces(bot)
+slash = SlashCommand(bot, sync_commands=True)
 
 bot.load_extension('cogs.roles')
 bot.load_extension('cogs.fortune')
