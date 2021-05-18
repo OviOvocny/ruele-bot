@@ -1,21 +1,19 @@
-import shelve
 import discord
 
 async def manage_reaction(bot, payload, added: bool):
     if payload.user_id == bot.user.id:
         return
 
-    with shelve.open('watched_messages') as wm:
-        if str(payload.message_id) not in wm:
-            return
+    roleID = await bot.db.hget('role_reactions', payload.message_id)
 
-        messageID = payload.message_id
-        roleID = wm[str(messageID)]
-        guild = bot.get_guild(payload.guild_id)
-        role = discord.utils.get(guild.roles, id=roleID)
-        member = discord.utils.get(guild.members, id=payload.user_id)
+    if roleID is None:
+        return
 
-        if added:
-            await member.add_roles(role)
-        else:
-            await member.remove_roles(role)
+    guild = bot.get_guild(payload.guild_id)
+    role = discord.utils.get(guild.roles, id=int(roleID))
+    member = discord.utils.get(guild.members, id=payload.user_id)
+
+    if added:
+        await member.add_roles(role)
+    else:
+        await member.remove_roles(role)

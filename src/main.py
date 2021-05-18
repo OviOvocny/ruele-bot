@@ -6,10 +6,12 @@ import logging
 import shelve
 from asyncio import sleep
 from random import randrange, random
+import sys
 import aioredis
 
 import discord
 from discord.ext import commands
+from discord.ext.commands.errors import CommandError
 from constants import REDIS_PASS
 
 from modules.manage_reaction import manage_reaction
@@ -52,10 +54,11 @@ async def reminder_runner ():
 
                     await channel.send(msg)
 
-def on_exit():
-    print('Closing Redis pool...')
+async def on_exit():
     # pylint: disable=no-member
+    print('Closing Redis pool...')
     bot.db.close()
+    await bot.db.wait_closed()
 
 @bot.event
 async def on_ready():
@@ -89,6 +92,7 @@ async def on_command_error(ctx, err):
             await ctx.send(faces.random())
         return
     await ctx.send(str(faces.get('panic')) + ' Sorry, I think I\'m lost… \n' + str(err))
+    logger.error(err)
 
 # CONFIG --------------------------------------------------------------------
 
@@ -106,9 +110,8 @@ async def on_raw_reaction_remove(payload):
 
 @bot.event
 async def on_raw_message_delete(payload):
-    with shelve.open('watched_messages') as wm:
-        if str(payload.message_id) in wm:
-            del wm[str(payload.message_id)]
+    # pylint: disable=no-member
+    await bot.db.hdel('role_reactions', payload.message_id)
 
 # SEND ANYTHING------------------------------------------------------------
 

@@ -27,17 +27,7 @@ class Reminders(commands.Cog):
 
         guild = ctx.message.guild
         channel = ctx.message.channel
-        with shelve.open('reminder_map', writeback=True) as rm:
-            if not reminder in rm:
-                print('adding type')
-                rm[reminder] = {}
-            if not guild.id in rm[reminder]:
-                print('adding guild')
-                rm[reminder][guild.id] = None
-            rm[reminder][guild.id] = (channel.id, role.id)
-            print('SET')
-            print(rm[reminder][guild.id])
-
+        await self.bot.db.hset('reminders', f'{reminder}:{guild.id}', f'{channel.id}:{role.id}')
         await ctx.send(f'Okay, I\'ll send periodic **{reminder}** reminders to this channel for the **{role.name}** role.')
 
     @assign_reminder.error
@@ -60,18 +50,16 @@ class Reminders(commands.Cog):
             raise commands.CommandError('This type of reminder doesn\'t exist')
 
         guild = ctx.message.guild
-        with shelve.open('reminder_map', writeback=True) as rm:
-            print(rm.keys())
-            print(rm[reminder].keys())
-            if not reminder in rm or not guild.id in rm[reminder]:
-                await ctx.send('This reminder type wasn\'t registered here. My work here is done!')
-            else:
-                del rm[reminder][guild.id]
-                await ctx.send('Okay, I removed the reminder registration.')
+        result = await self.bot.db.hdel('reminders', f'{reminder}:{guild.id}')
+
+        if result == 0:
+            await ctx.send('This reminder type wasn\'t registered here. My work here is done!')
+        else:
+            await ctx.send('Okay, I removed the reminder registration.')
 
     # SHOW NEXT ---------------------------------------------------------------
 
-    @commands.command('upcoming',
+    @commands.command('upcoming', hidden=True,
         brief='Get closest reminder info',
         help='I\'ll show details for the closest upcoming reminder and whether your guild is registered to receive it.'
     )
@@ -111,12 +99,12 @@ class Reminders(commands.Cog):
         guild = ctx.message.guild
         rtypes = {r.type: r(0).description() for r in R.types}
         rroles = {}
-        with shelve.open('reminder_map') as rm:
-            for rtype, guilds in rm.items():
-                if guild.id in guilds:
-                    _, role_id = guilds[guild.id]
-                    role = discord.utils.get(guild.roles, id=role_id)
-                    rroles[rtype] = role.name
+        for rtype in rtypes.keys():
+            val: str = await self.bot.db.hget('reminders', f'{rtype}:{guild.id}')
+            if val:
+                role_id = val.split(':')[1]
+                role = discord.utils.get(guild.roles, id=int(role_id))
+                rroles[rtype] = role.name
 
         msg = '\n\n'.join([f'__{t}__ ({rroles.get(t, "no role")})\n*{d}.*' for t,d in rtypes.items()])
         await ctx.send(msg)

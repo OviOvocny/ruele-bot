@@ -1,0 +1,11 @@
+role_reactions:
+  - messageID -> roleID
+
+manager_role:
+  - guildID -> roleID
+
+member_role:
+  - guildID -> roleID
+
+reminders:
+  - type:guildID -> channelID:roleID

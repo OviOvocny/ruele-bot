@@ -21,9 +21,8 @@ class Roles(commands.Cog):
     @commands.has_guild_permissions(manage_roles=True)
     @commands.guild_only()
     async def manager_role(self, ctx, *, role: discord.Role):
+        await self.bot.db.hset('manager_role', ctx.message.guild.id, role.id)
         await ctx.send(f'Ok, **{role.name}** is now the management role for *{ctx.message.guild.name}*.')
-        with shelve.open('guild_managers', writeback=True) as gm:
-            gm[str(ctx.message.guild.id)] = role.id
 
     @commands.command('member-role',
         brief='Designate a role as the guild membership role',
@@ -32,14 +31,14 @@ class Roles(commands.Cog):
     @commands.has_guild_permissions(manage_roles=True)
     @commands.guild_only()
     async def member_role(self, ctx, *, role: discord.Role):
+        await self.bot.db.hset('member_role', ctx.message.guild.id, role.id)
         await ctx.send(f'Ok, **{role.name}** is now the member role for *{ctx.message.guild.name}*.')
-        with shelve.open('guild_members', writeback=True) as gm:
-            gm[str(ctx.message.guild.id)] = role.id
 
     @commands.command('test-mgmt', hidden=True)
     @commands.check(is_manager)
     @commands.guild_only()
     async def test_mgmt(self, ctx):
+        # TODO redis
         with shelve.open('guild_managers') as gm:
             await ctx.send(", ".join([str(a) for a in gm.values()]))
 
@@ -52,7 +51,8 @@ class Roles(commands.Cog):
     )
     @commands.check(is_manager)
     @commands.guild_only()
-    async def membership(self, ctx, *, user: discord.Member):
+    async def membership(self, ctx, user: discord.Member, ign: str):
+        # TODO redis
         if user.bot:
             await ctx.send(f'{ctx.message.author.display_name}! {user.display_name} is a bot. {str(self.faces.get("angry"))}')
         else:
@@ -89,8 +89,7 @@ class Roles(commands.Cog):
         await ctx.message.delete()
         msg = await ctx.send(f'Heirs of *{ctx.message.guild.name}*, click the reaction to add or remove the **{role.name}** role.')
         await msg.add_reaction('✅')
-        with shelve.open('watched_messages', writeback=True) as wm:
-            wm[str(msg.id)] = role.id
+        await self.bot.db.hset('role_reactions', msg.id, role.id)
 
     @manage_roles.error
     async def manage_roles_err(self, ctx, err):
@@ -107,13 +106,14 @@ class Roles(commands.Cog):
     @commands.guild_only()
     async def list_roles(self, ctx):
         roles = []
-        with shelve.open('watched_messages') as wm:
-            roles = [role.name for role in get_local_roles(ctx.message.guild, wm.values())]
+        rr = await self.bot.db.hgetall('role_reactions')
+        """ roles = [role.name for role in get_local_roles(ctx.message.guild, rr.values())]
         nl = '\n'
         if len(roles) == 0:
             await ctx.send('Nothing in this guild yet…')
         else:
-            await ctx.send(f'I manage these roles on *{ctx.message.guild.name}*:{nl}**{nl.join(roles)}**')
+            await ctx.send(f'I manage these roles on *{ctx.message.guild.name}*:{nl}**{nl.join(roles)}**') """
+        await ctx.send(rr)
 
 def setup(bot):
     bot.add_cog(Roles(bot))
