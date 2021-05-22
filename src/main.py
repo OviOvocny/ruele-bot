@@ -34,27 +34,6 @@ bot.load_extension('cogs.roles')
 bot.load_extension('cogs.fortune')
 bot.load_extension('cogs.reminders')
 
-"""
-async def reminder_runner ():
-    r = Reminders()
-    while True:
-        events = await r.upcoming()
-        event = events[0]
-        await discord.utils.sleep_until(event.datetime)
-        with shelve.open('reminder_map') as rm:
-            if event.type in rm:
-                for guild_id in rm[event.type]:
-                    channel_id, role_id = rm[event.type][guild_id]
-
-                    guild = bot.get_guild(guild_id)
-                    channel = bot.get_channel(channel_id)
-                    role = discord.utils.get(guild.roles, id=role_id)
-
-                    msg = f'{role.mention} {event.message}'
-
-                    await channel.send(msg)
-"""                    
-
 async def on_exit():
     # pylint: disable=no-member
     print('Closing Redis pool...')
@@ -84,7 +63,6 @@ async def on_ready():
     except OSError:
         logger.error('Could not open database pool. Exiting!')
         exit()
-    # await reminder_runner()
 
 @bot.event
 async def on_command_error(ctx, err):

@@ -9,3 +9,6 @@ member_role:
 
 reminders:
   - type:guildID -> channelID:roleID
+
+ign:
+  - userID -> str (IGN)

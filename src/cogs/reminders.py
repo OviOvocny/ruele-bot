@@ -1,5 +1,7 @@
 import discord
+import pendulum
 from discord.ext import commands
+from discord.ext import tasks
 from modules.reminder_schedulers import Reminders as R
 
 def is_valid_reminder (reminder):
@@ -9,7 +11,43 @@ class Reminders(commands.Cog):
     """Use these commands to register reminders for roles."""
 
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: commands.Bot = bot
+        self.reminders = R()
+        self.runner.start()
+
+    def cog_unload(self):
+        self.runner.cancel()
+
+    # RUNNER ------------------------------------------------------------------
+
+    @tasks.loop(hours=1, reconnect=True)
+    async def runner(self):
+        events = await self.reminders.upcoming()
+        now = pendulum.now('UTC')
+        current = list(filter(lambda e: e.datetime < now.add(minutes=59), events))
+        for event in current:
+            _, targets = await self.bot.db.hscan('reminders', match=f'{event.type}:*')
+            for type_target, channel_role in targets:
+                _, guild_id = type_target.split(':')
+                channel_id, role_id = channel_role.split(':')
+
+                guild = self.bot.get_guild(int(guild_id))
+                channel = self.bot.get_channel(int(channel_id))
+                role = discord.utils.get(guild.roles, id=int(role_id))
+
+                msg = f'{role.mention} {event.message}'
+                await channel.send(msg)
+
+
+    @runner.before_loop
+    async def before_reminders(self):
+        await self.bot.wait_until_ready()
+        now = pendulum.now('UTC')
+        the_hour = now.at(now.hour + 1)
+        print(f'Reminders starting at {the_hour}')
+        await discord.utils.sleep_until(the_hour)
+
+
 
     # REMIND ROLES ------------------------------------------------------------
 

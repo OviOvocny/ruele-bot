@@ -29,5 +29,5 @@ def get_local_roles(guild, id_collection):
             continue
     return roles
 
-def timediff (dt):
+def timediff(dt):
     return dt.diff_for_humans(pendulum.now('UTC'), True)
