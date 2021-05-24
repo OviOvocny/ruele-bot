@@ -25,17 +25,22 @@ class Reminders(commands.Cog):
         events = await self.reminders.upcoming()
         now = pendulum.now('UTC')
         current = list(filter(lambda e: e.datetime < now.add(minutes=59), events))
+        print('Reminders for the hour:', current)
         for event in current:
+            print(f'Processing {event.title}')
             _, targets = await self.bot.db.hscan('reminders', match=f'{event.type}:*')
+            print('DB Matched', targets)
             for type_target, channel_role in targets:
                 _, guild_id = type_target.split(':')
                 channel_id, role_id = channel_role.split(':')
+                print('Dispatching', guild_id, channel_id, role_id)
 
                 guild = self.bot.get_guild(int(guild_id))
                 channel = self.bot.get_channel(int(channel_id))
                 role = discord.utils.get(guild.roles, id=int(role_id))
 
                 msg = f'{role.mention} {event.message}'
+                print(f'Sending message to {guild.name}: {msg}')
                 await channel.send(msg)
 
 
