@@ -7,7 +7,7 @@ ReminderEvent = namedtuple("ReminderEvent", ["type", "datetime", "timediff", "ti
 class Scheduler(ABC):
     """Base for E7 event reminder schedule providers"""
     def __init__ (self, priority):
-        self.priority = priority * 5
+        self.priority = 10 + priority * 5 # a fixed 10s delay in front to avoid missed high prio reminders
 
     @abstractmethod
     async def next_datetime (self) -> pendulum.DateTime:
