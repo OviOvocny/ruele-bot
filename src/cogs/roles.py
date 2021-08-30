@@ -126,6 +126,8 @@ class Roles(commands.Cog):
         else:
             print(dir(ctx))
             member = discord.utils.get(ctx.guild.members, id=int(stored))
+            if not member:
+                await ctx.send(f'I don\'t see {ign} in this server, so I can\'t give you a name {str(self.faces.get("sad"))}', hidden=True)
             await ctx.send(f'{ign} is {member.display_name} ({member.name}#{member.discriminator}) on Discord.', hidden=True)
 
     @commands.command('sync-ign-data', hidden=True)
