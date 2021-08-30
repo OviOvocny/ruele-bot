@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord_slash import cog_ext
 from discord_slash.model import SlashCommandOptionType
 from discord_slash.utils.manage_commands import create_option
+from slugify import slugify
 from modules.utils import get_local_roles
 from modules.checks import is_manager
 from modules.emoji import Faces
@@ -102,7 +103,41 @@ class Roles(commands.Cog):
                 await ctx.send(f'{user.display_name} is {stored}.', hidden=True)
         else:
             await self.bot.db.hset('ign', user.id, name)
+            await self.bot.db.hset('reverseign', slugify(name), user.id)
             await ctx.send(f'I\'ll remember {user.display_name} as {name}!', hidden=True)
+
+    @cog_ext.cog_slash(
+        # guild_ids=[416262003070337034], # dev
+        name='whois',
+        description='Find a Discord member by in-game name',
+        options=[
+            create_option(
+                name='ign',
+                description='In-game name you want to look up (case-insensitive)',
+                option_type=SlashCommandOptionType.STRING,
+                required=True
+            )
+        ]
+    )
+    async def whois(self, ctx, ign: str):
+        stored = await self.bot.db.hget('reverseign', slugify(ign))
+        if stored is None:
+            await ctx.send(f'I don\'t know who {ign} is {str(self.faces.get("panic"))} (maybe they left)', hidden=True)
+        else:
+            print(dir(ctx))
+            member = discord.utils.get(ctx.guild.members, id=int(stored))
+            await ctx.send(f'{ign} is {member.display_name} ({member.name}#{member.discriminator}) on Discord.', hidden=True)
+
+    @commands.command('sync-ign-data', hidden=True)
+    @commands.is_owner()
+    async def sync_ign_data(self, ctx):
+        await ctx.send('Scanning IGNs. You shouldn\'t need to do this again once completed.')
+        _, mapping = await self.bot.db.hscan('ign')
+        num_synced = 0
+        for uid, ign in mapping:
+            result = await self.bot.db.hsetnx('reverseign', slugify(ign), uid)
+            num_synced += int(result)
+        await ctx.send(f'IGN mapping complete. I synchronised {num_synced} names for reverse lookups. Try it out with `/whois <ign>`.')
 
 
 
